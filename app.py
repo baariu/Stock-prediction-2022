@@ -1,6 +1,7 @@
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
+import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from datetime import datetime as dt
 import pandas as pd
@@ -13,7 +14,7 @@ from stock_model import prediction
 from sklearn.svm import SVR
 
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__ ,external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 
 options = [
@@ -113,7 +114,7 @@ html.Div([#Division 2
 
 @app.callback( #1st callback for outputing logo,name and description of the stock chosen.
     
-    [Output("ticker","children"), Output("logo","src"),Output("description", "children")], 
+    [Output("ticker","children"),Output("description", "children")], 
 
     [Input('submit_button','n_clicks'), State('dropdown_symbol','value')]
     )
@@ -126,8 +127,8 @@ def update_data(n,value): # n represents the input component_property "n_clicks"
         ticker= yf.Ticker(value)
         inf= ticker.info
         df= pd.DataFrame().from_dict(inf,orient = "index").T
-        dff=df[["logo_url","shortName","longBusinessSummary"]]
-        return dff['shortName'].values[0], dff['logo_url'].values[0], dff['longBusinessSummary'].values[0]
+        dff=df[["shortName","longBusinessSummary"]]
+        return dff['shortName'].values[0], dff['longBusinessSummary'].values[0]
 
 @app.callback(#2nd callback. This updates the stock plot graph by using the stockprice button to get the graph 
      Output("graphs-content","figure"),
@@ -140,7 +141,7 @@ def update_graph(n,start,end,value):
     else:
         df = yf.download(value, start= start , end= end, period= max)
         df.reset_index(inplace=True)
-        
+        print(df.head(2))
         def get_stock_price_fig(df):
             fig = px.line(df,
                 x='Date', # Date str,
