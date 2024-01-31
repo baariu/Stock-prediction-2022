@@ -5,7 +5,7 @@ def prediction(ticker, n_days):
     import plotly.graph_objs as go
     from sklearn.svm import SVR
     from sklearn.preprocessing import StandardScaler
-    from sklearn.metrics import mean_absolute_error, mean_squared_error
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
     from sklearn.model_selection import train_test_split
     from sklearn.model_selection import GridSearchCV
     from sklearn.pipeline import make_pipeline
@@ -13,20 +13,20 @@ def prediction(ticker, n_days):
     import warnings
     warnings.filterwarnings("ignore")
 
-    #Download the ticker data and make neww column called Day
-    df= yf.download(ticker, period= '60d')
+    #Download the ticker data and make new column called Day
+    df= yf.download(ticker, period= "60d")
     df.reset_index(inplace=True)
     df["Day"]= df.index
+    #print(df.head())
     
     #Define your X/Features and your Y/Labels before you can split.
-
     Days= list()
     for i in range(len(df.Day)):
         Days.append([i])
 
     X=Days
     y=df[["Close"]]
-    print(X)
+    #print(X)
 
     #SPLIT TRAIN AND TEST DATA BEFORE PREPROCESSSING AND STANDARDIZE Xtrain and Xtest Separately.PIPELINE DOES IT AUTOMATICALLY FOR YOU.
     X_train,X_test,y_train,y_test=train_test_split(X,y,test_size = 0.1, random_state=0)
@@ -66,9 +66,10 @@ def prediction(ticker, n_days):
     pipeline.fit(X_train, y_train) 
     y_pred = pipeline.predict(X_test)               
 
-    #Print the Error Metrics MAE AND MSE. The closer to 0 the better. But be careful not to Overfit
+    #Print the Error Metrics MAE, MSE and R2 score. The closer to 0 the better. But be careful not to Overfit
     print(f'\n The mean absolute error is:', mean_absolute_error(y_test, y_pred)) 
     print(f'\n The mean squared error is:', mean_squared_error(y_test, y_pred))
+    print(f'\n The r2_score is:', r2_score(y_test, y_pred))
 
     #Prepare values for our plot
     output_days = list()
@@ -91,7 +92,7 @@ def prediction(ticker, n_days):
     fig.update_layout(
         title="Predicted Close Price of next " + str(n_days - 1) + " days",
         xaxis_title="Date",
-        yaxis_title="Closed Price",
+        yaxis_title="Close Price",
         legend_title="Legend Title",
     )
 

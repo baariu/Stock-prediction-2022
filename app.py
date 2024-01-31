@@ -55,7 +55,7 @@ html.Div([ #Division 1
                     html.H2('Enter start and end date:',style={'color':'#FFFFFF'}), 
                     dcc.DatePickerRange(
                         id='date_range',
-                        min_date_allowed=dt(2015, 1, 1),
+                        min_date_allowed=dt(2004, 8, 21),
                         max_date_allowed=dt.now(),
                         start_date_placeholder_text="Start",
                         end_date=dt.now(),
@@ -112,7 +112,7 @@ html.Div([#Division 2
 ],style={'marginTop':'-550px','marginLeft':'550px','width': '50vw','align-items':'centre','display':'flex','flex-direction':'column','justify-content': 'flex-start'},className='content'), 
 ],className="container")
 
-@app.callback( #1st callback for outputing logo,name and description of the stock chosen.
+@app.callback( #1st callback for outputing name and description of the stock chosen.
     
     [Output("ticker","children"),Output("description", "children")], 
 
@@ -127,6 +127,7 @@ def update_data(n,value): # n represents the input component_property "n_clicks"
         ticker= yf.Ticker(value)
         inf= ticker.info
         df= pd.DataFrame().from_dict(inf,orient = "index").T
+        #print(df.columns.to_list())
         dff=df[["shortName","longBusinessSummary"]]
         return dff['shortName'].values[0], dff['longBusinessSummary'].values[0]
 
@@ -140,13 +141,21 @@ def update_graph(n,start,end,value):
         raise PreventUpdate  
     else:
         df = yf.download(value, start= start , end= end, period= max)
+        #print(df.head())
         df.reset_index(inplace=True)
-        print(df.head(2))
+        #df.to_csv('data.csv', index=False)
+        
         def get_stock_price_fig(df):
             fig = px.line(df,
                 x='Date', # Date str,
-                y=['Open','Close'],# list of 'Open' and 'Close',
-                title="Closing and Opening Price vs Date")  
+                y=['Open','Close'],
+                labels={"Open":"Price in USD"}# list of 'Open' and 'Close',
+                )  
+            fig.update_layout(
+                title="Closing and Opening Price vs Date",
+                xaxis_title="Date",
+                yaxis_title="Price in USD"
+            )
             return fig
 
     figure = get_stock_price_fig(df)
@@ -169,10 +178,11 @@ def update_indicator(n,start,end,value):
                                                                                         #Moving Average is the indicator we are using.                                                                           
             fig = px.scatter(df,
                     x= 'Date',# Date str,
-                    y= 'EWA_20',# EWA_20 str,
-                    title="Exponential Moving Average vs Date")
-
-            fig.update_traces(mode='lines+markers') # appropriate mode
+                    y= 'EWA_20',
+                    labels={'Close': 'Stock Price', 'EWA_20': '20-day EMA'}# EWA_20 str,
+                   )
+            fig.update_layout(title='Exponential Moving Average vs Date', xaxis_title='Date', yaxis_title='Price')
+            fig.update_traces(mode='lines+markers') 
             return fig
         figure = get_indicator(df)
         return figure
@@ -193,4 +203,4 @@ def predict_stock(n,value,n_days):
 
 
 if __name__ == '__main__':
-    app.run_server(debug = True) 
+    app.run_server(debug = True)
